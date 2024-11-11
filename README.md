@@ -22,7 +22,7 @@ cd nodejs2024Q3-service
 ## Switch branch
 
 ```
-npm install
+git checkout node
 ```
 
 ## Installing NPM modules

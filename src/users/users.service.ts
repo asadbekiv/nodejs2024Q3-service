@@ -6,21 +6,12 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { CreateUserDto } from './dtos/create.user.dto';
 import { UpdatePasswordDto } from './dtos/update.user.dto';
-import { UserByIdDto } from './dtos/userId.user.dto';
-
-export interface User {
-  id: string; // uuid v4
-  login: string;
-  password: string;
-  version: number; // integer number, increments on update
-  createdAt: number; // timestamp of creation
-  updatedAt: number; // timestamp of last update
-}
+import { User } from './user.entity';
+import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class UsersService {
   private users: User[] = [];
-  private idCounter = 1;
 
   getAllUsers(): User[] {
     return this.users;
@@ -35,20 +26,22 @@ export class UsersService {
   }
 
   create(CreateUserDto: CreateUserDto): User {
+    const timestamp: number = Date.now();
     const newUser: User = {
       id: uuidv4(),
       login: CreateUserDto.login,
       password: CreateUserDto.password,
-      version: 0,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      version: 1,
+      createdAt: timestamp,
+      updatedAt: timestamp,
     };
     this.users.push(newUser);
-    return newUser;
+
+    return plainToClass(User, newUser);
   }
 
-  updatePassword(userId: string, updatePasswordDto: UpdatePasswordDto): User {
-    const { oldPassword, newPassword } = updatePasswordDto;
+  updatePassword(userId: string, updatePassword: UpdatePasswordDto): User {
+    const { oldPassword, newPassword } = updatePassword;
     const user = this.users.find((user) => user.id === userId);
     if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found`);
@@ -63,7 +56,7 @@ export class UsersService {
     user.version += 1;
     user.updatedAt = Date.now();
 
-    return user;
+    return plainToClass(User, user);
   }
   delete(userId: string): void {
     const user = this.users.findIndex((user) => user.id === userId);

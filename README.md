@@ -28,7 +28,7 @@ git checkout node
 ## Installing NPM modules
 
 ```
-npm install
+npm install --legacy-peer-deps
 ```
 
 

@@ -22,14 +22,13 @@ import {
   ApiBody,
   ApiParam,
 } from '@nestjs/swagger';
-import { CleanupService } from 'src/helper/cleanup.service';
+
 
 @ApiTags('Albums')
 @Controller('album')
 export class AlbumsController {
   constructor(
     private readonly albumService: AlbumsService,
-    private readonly cleanupsService: CleanupService,
   ) {}
   @Get()
   @ApiOperation({ summary: 'Get all albums.' })
@@ -110,6 +109,5 @@ export class AlbumsController {
   @HttpCode(204)
   async deleteAlbum(@Param() params: AlbumIdDto): Promise<void> {
     await this.albumService.deleteAlbum(params.id);
-    await this.cleanupsService.cleanupAlbum(params.id);
   }
 }

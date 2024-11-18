@@ -10,6 +10,8 @@ import 'dotenv/config';
 
 const PORT = process.env.PORT;
 
+
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
@@ -36,7 +38,7 @@ async function bootstrap() {
     console.error('Error saving API documentation:', error);
   }
 
-  await app.listen(PORT, '0.0.0.0', () => {
+  await app.listen(PORT, () => {
     console.log(`Server is runing on PORT ${PORT}`);
   });
 }

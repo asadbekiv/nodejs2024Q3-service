@@ -19,26 +19,17 @@ export class AlbumsService {
   async getAllAlbums(): Promise<Album[]> {
     return await this.albumsRepository.find();
   }
-  async getAlbumById(albumId: string): Promise<Album> {
-    const album = await this.albumsRepository.findOneBy({ albumId });
+  async getAlbumById(id: string): Promise<Album> {
+    const album = await this.albumsRepository.findOneBy({ id });
     if (!album) {
-      throw new NotFoundException(`Album with ID ${albumId} not found`);
+      throw new NotFoundException(`Album with ID ${id} not found`);
     }
     return album;
   }
   async createAlbum(createAlbum: CreateAlbumDto): Promise<Album> {
-    if (createAlbum.artistId) {
-      const artistExists = await this.artistsRepository.findOneBy({
-        artistId: createAlbum.artistId,
-      });
-      if (!artistExists) {
-        throw new NotFoundException(
-          `Artist with ID ${createAlbum.artistId} not found`,
-        );
-      }
-    }
+    
     const newAlbum = this.albumsRepository.create({
-      albumId: uuidv4(),
+      id: uuidv4(),
       name: createAlbum.name,
       year: createAlbum.year,
       artistId: createAlbum.artistId || null,
@@ -47,12 +38,12 @@ export class AlbumsService {
     return await this.albumsRepository.save(newAlbum);
   }
   async updateAlbum(
-    albumId: string,
+    id: string,
     updateAlbum: UpdateAlbumDto,
   ): Promise<Album> {
-    const album = await this.albumsRepository.findOneBy({ albumId });
+    const album = await this.albumsRepository.findOneBy({ id });
     if (!album) {
-      throw new NotFoundException(`Album with ID ${albumId} not found`);
+      throw new NotFoundException(`Album with ID ${id} not found`);
     }
 
     album.name = updateAlbum.name;
@@ -61,21 +52,14 @@ export class AlbumsService {
 
     return this.albumsRepository.save(album);
   }
-  async deleteAlbum(albumId: string): Promise<void> {
-    const album = await this.albumsRepository.findOneBy({ albumId });
+  async deleteAlbum(id: string): Promise<void> {
+    const album = await this.albumsRepository.findOneBy({ id });
     if (!album) {
-      throw new NotFoundException(`Album with ID ${albumId} not found`);
+      throw new NotFoundException(`Album with ID ${id} not found`);
     }
 
     await this.albumsRepository.remove(album);
   }
 
-  async deleteArtist(artistId: string): Promise<void> {
-    const album = await this.albumsRepository.find();
-    album.forEach((album) => {
-      if (album.artistId === artistId) {
-        album.artistId = null;
-      }
-    });
-  }
+  
 }

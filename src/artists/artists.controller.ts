@@ -23,14 +23,13 @@ import {
   ApiBody,
   ApiParam,
 } from '@nestjs/swagger';
-import { CleanupService } from 'src/helper/cleanup.service';
 
 @ApiTags('Artists')
 @Controller('artist')
 export class ArtistsController {
   constructor(
     private readonly artistService: ArtistsService,
-    private readonly cleanupsService: CleanupService,
+  
   ) {}
 
   @Get()
@@ -115,6 +114,6 @@ export class ArtistsController {
   @HttpCode(204)
   async deleteArtist(@Param() params: ArtistIdDto): Promise<void> {
     this.artistService.deleteArtist(params.id);
-    this.cleanupsService.cleanupArtist(params.id);
+    
   }
 }

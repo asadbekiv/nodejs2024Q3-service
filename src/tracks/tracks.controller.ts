@@ -12,8 +12,6 @@ import {
 } from '@nestjs/common';
 import { UpdateTrackDto } from './dtos/update.track.dto';
 import { TracksService } from './tracks.service';
-import { ArtistsService } from 'src/artists/artists.service';
-import { AlbumsService } from 'src/albums/albums.service';
 import { CreateTrackDto } from './dtos/ceate.track.dto';
 import { TrackIdDto } from './dtos/trackId.track.dto';
 import { Track } from './track.entity';
@@ -24,14 +22,14 @@ import {
   ApiBody,
   ApiParam,
 } from '@nestjs/swagger';
-import { CleanupService } from 'src/helper/cleanup.service';
+
 
 @ApiTags('Tracks')
 @Controller('track')
 export class TracksController {
   constructor(
     private readonly trackService: TracksService,
-    private readonly cleanupsService: CleanupService,
+    
   ) {}
 
   @Get()
@@ -116,6 +114,5 @@ export class TracksController {
   @HttpCode(204)
   async deleteTrack(@Param() params: TrackIdDto): Promise<void> {
     await this.trackService.deleteTrack(params.id);
-    await this.cleanupsService.cleanupAlbum(params.id);
   }
 }

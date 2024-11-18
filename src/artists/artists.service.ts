@@ -19,9 +19,7 @@ export class ArtistsService {
 
   async getArtistById(artistId: string): Promise<Artist> {
     const artist = await this.artistsRepository.findOneBy({ artistId });
-    if (!artist) {
-      throw new NotFoundException(`Artist with ID ${artistId} not found `);
-    }
+    
     return artist;
   }
 
@@ -41,9 +39,7 @@ export class ArtistsService {
     updateArtist: UpdateArtistDto,
   ): Promise<Artist> {
     const artist = await this.artistsRepository.findOneBy({ artistId });
-    if (!artist) {
-      throw new NotFoundException(`Artist with ID ${artistId} not found `);
-    }
+    
     artist.name = updateArtist.name;
     artist.grammy = updateArtist.grammy;
     return await this.artistsRepository.save(artist);
@@ -51,9 +47,7 @@ export class ArtistsService {
 
   async deleteArtist(artistId: string): Promise<void> {
     const artist = await this.artistsRepository.findOneBy({ artistId });
-    if (!artist) {
-      throw new NotFoundException(`Artist with ID ${artistId} not found`);
-    }
+    
     await this.artistsRepository.remove(artist);
   }
 }

@@ -1,28 +1,32 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn,OneToOne,JoinColumn } from 'typeorm';
+import { Artist } from 'src/artists/artist.entity';
+import { Album } from 'src/albums/album.entity';
+import { ValidateIf } from 'class-validator';
+
 
 @Entity({ name: 'tracks' })
 export class Track {
   @PrimaryGeneratedColumn()
   @ApiProperty({
-    example: 1,
-    description: 'Primary database ID (auto-incremented)',
-  })
-  orderId: number;
-
-  @Column()
-  @ApiProperty({
     example: 'a3e1b9c3-2f2a-4d9c-8c3b-8a3b1c3d2f2a',
     description: 'Unique identifier for the track (UUID v4)',
   })
-  trackId: string;
+  id: string;
+
   @Column()
   @ApiProperty({
     example: 'Bohemian Rhapsody',
     description: 'Name of the track',
   })
   name: string;
-  @Column()
+  @OneToOne(() => Artist, {
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'artistId' })
+  artist!: string | null;
+  @Column({ nullable: true })
+  @ValidateIf((_, value) => value !== null)
   @ApiProperty({
     example: 'd7b5f3c5-2e4a-4b9d-8f3b-8b3d5c3d7e8a',
     description:
@@ -31,7 +35,14 @@ export class Track {
   })
   artistId: string | null;
 
-  @Column()
+  @OneToOne(() => Album, {
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'albumId' })
+  album!: string | null;
+
+  @Column({ nullable: true })
+  @ValidateIf((_, value) => value !== null)
   @ApiProperty({
     example: 'e7b5f3c5-2e4a-4b9d-8f3b-8b3d5c3d7e8c',
     description: 'Unique identifier of the album, refers to Album entity',

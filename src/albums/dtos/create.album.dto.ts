@@ -4,6 +4,7 @@ import {
   IsInt,
   IsUUID,
   IsOptional,
+  ValidateIf
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -19,6 +20,7 @@ export class CreateAlbumDto {
   year: number;
 
   @IsUUID()
+  @ValidateIf((_, value) => value !== null)
   @IsOptional()
   @ApiProperty({
     example: '98ab7e33-32c9-45bd-b4db-13430443c67f',

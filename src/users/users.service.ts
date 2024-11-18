@@ -37,8 +37,8 @@ export class UsersService {
       login: createUserDto.login,
       password: createUserDto.password,
       version: 1,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     });
 
     await this.usersRepository.save(newUser);
@@ -63,7 +63,7 @@ export class UsersService {
     }
     user.version += 1;
     user.password = newPassword;
-    user.updatedAt = new Date();
+    user.updatedAt = Date.now();
 
     return await this.usersRepository.save(user);
   }

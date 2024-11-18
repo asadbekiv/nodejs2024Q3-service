@@ -1,51 +1,59 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateArtistDto } from './dtos/create.artist.dto';
 import { v4 as uuidv4 } from 'uuid';
-import { updateArtistDto } from './dtos/update.artist.dto';
+import { UpdateArtistDto } from './dtos/update.artist.dto';
 import { Artist } from './artist.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class ArtistsService {
-  private artists: Artist[] = [];
+  constructor(
+    @InjectRepository(Artist)
+    private artistsRepository: Repository<Artist>,
+  ) {}
 
-  getAllArtists(): Artist[] {
-    return this.artists;
+  async getAllArtists(): Promise<Artist[]> {
+    return await this.artistsRepository.find();
   }
 
-  getArtistById(artistId: string): Artist {
-    const artist = this.artists.find((artist) => artist.id === artistId);
+  async getArtistById(artistId: string): Promise<Artist> {
+    const artist = await this.artistsRepository.findOneBy({ artistId });
     if (!artist) {
       throw new NotFoundException(`Artist with ID ${artistId} not found `);
     }
     return artist;
   }
 
-  createArtist(createArtistDto: CreateArtistDto): Artist {
-    const newArtist: Artist = {
-      id: uuidv4(),
+  async createArtist(createArtistDto: CreateArtistDto): Promise<Artist> {
+    const newArtist = this.artistsRepository.create({
+      artistId: uuidv4(),
       name: createArtistDto.name,
       grammy: createArtistDto.grammy,
-    };
-    this.artists.push(newArtist);
+    });
+    await this.artistsRepository.save(newArtist);
 
     return newArtist;
   }
 
-  updataArtist(artistId: string, updateArtist: updateArtistDto): Artist {
-    const artist = this.artists.find((artist) => artist.id === artistId);
+  async updataArtist(
+    artistId: string,
+    updateArtist: UpdateArtistDto,
+  ): Promise<Artist> {
+    const artist = await this.artistsRepository.findOneBy({ artistId });
     if (!artist) {
       throw new NotFoundException(`Artist with ID ${artistId} not found `);
     }
     artist.name = updateArtist.name;
     artist.grammy = updateArtist.grammy;
-    return artist;
+    return await this.artistsRepository.save(artist);
   }
 
-  deleteArtist(artistId: string): void {
-    const artist = this.artists.findIndex((artist) => artist.id === artistId);
-    if (artist === -1) {
+  async deleteArtist(artistId: string): Promise<void> {
+    const artist = await this.artistsRepository.findOneBy({ artistId });
+    if (!artist) {
       throw new NotFoundException(`Artist with ID ${artistId} not found`);
     }
-    this.artists.splice(artist, 1);
+    await this.artistsRepository.remove(artist);
   }
 }

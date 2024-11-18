@@ -27,8 +27,8 @@ export class FavoritesController {
     status: 200,
     description: 'Successfully retrieved Favorites list',
   })
-  getAllFavorites(): FavoritesResponse {
-    return this.favoriteService.getAllFavorites();
+  async getAllFavorites(): Promise<FavoritesResponse[]> {
+    return await this.favoriteService.getAllFavorites();
   }
   @Post('track/:id')
   @ApiOperation({ summary: 'Add track to Favorites' })
@@ -47,10 +47,12 @@ export class FavoritesController {
   })
   @UsePipes(ValidationPipe)
   @HttpCode(201)
-  addTrackToFavorites(@Param() params: TrackIdDto): {
-    message: string;
-  } {
-    return this.favoriteService.AddTrackToFavorites(params.id);
+  async addTrackToFavorites(
+    @Param() params: TrackIdDto,
+  ): Promise<FavoritesResponse> {
+    console.log(params);
+
+    return await this.favoriteService.AddTrackToFavorites(params.id);
   }
 
   @Delete('track/:id')
@@ -61,15 +63,10 @@ export class FavoritesController {
   @ApiResponse({ status: 404, description: 'Track not found.' })
   @HttpCode(204)
   @UsePipes(ValidationPipe)
-  deleteTrackFromFavorites(@Param() params: TrackIdDto): void {
-    const res = this.favoriteService.deleteTrackFromFavorites(params.id);
-    if (res) {
-      return;
-    }
-    throw new HttpException(
-      `Track with ID ${params.id} is not in favorites`,
-      HttpStatus.NOT_FOUND,
-    );
+  async deleteTrackFromFavorites(
+    @Param() params: TrackIdDto,
+  ): Promise<FavoritesResponse> {
+    return await this.favoriteService.deleteTrackFromFavorites(params.id);
   }
 
   @Post('album/:id')
@@ -89,8 +86,10 @@ export class FavoritesController {
   })
   @UsePipes(ValidationPipe)
   @HttpCode(201)
-  addAlbumToFavorites(@Param() params: AlbumIdDto): { message: string } {
-    return this.favoriteService.AddAlbumToFavorites(params.id);
+  async addAlbumToFavorites(
+    @Param() params: AlbumIdDto,
+  ): Promise<FavoritesResponse> {
+    return await this.favoriteService.AddAlbumToFavorites(params.id);
   }
   @Delete('album/:id')
   @ApiOperation({ summary: 'Delete a album from Favorites' })
@@ -100,15 +99,10 @@ export class FavoritesController {
   @ApiResponse({ status: 404, description: 'Album not found.' })
   @UsePipes(ValidationPipe)
   @HttpCode(204)
-  deleteAlbumFromFavorites(@Param() params: AlbumIdDto): void {
-    const res = this.favoriteService.deleteAlbumFromFavorites(params.id);
-    if (res) {
-      return;
-    }
-    throw new HttpException(
-      `Album with ID ${params.id} is not in favorites`,
-      HttpStatus.NOT_FOUND,
-    );
+  async deleteAlbumFromFavorites(
+    @Param() params: AlbumIdDto,
+  ): Promise<FavoritesResponse> {
+    return await this.favoriteService.deleteAlbumFromFavorites(params.id);
   }
 
   @Post('artist/:id')
@@ -128,8 +122,10 @@ export class FavoritesController {
   })
   @UsePipes(ValidationPipe)
   @HttpCode(201)
-  addArtistToFavorites(@Param() params: ArtistIdDto): { message: string } {
-    return this.favoriteService.AddArtistToFavorites(params.id);
+  async addArtistToFavorites(
+    @Param() params: ArtistIdDto,
+  ): Promise<FavoritesResponse> {
+    return await this.favoriteService.AddArtistToFavorites(params.id);
   }
 
   @Delete('artist/:id')
@@ -140,14 +136,9 @@ export class FavoritesController {
   @ApiResponse({ status: 404, description: 'Artist not found.' })
   @UsePipes(ValidationPipe)
   @HttpCode(204)
-  deleteArtistFromFavorites(@Param() params: ArtistIdDto): void {
-    const res = this.favoriteService.deleteArtistFromFavorites(params.id);
-    if (res) {
-      return;
-    }
-    throw new HttpException(
-      `Artist with ID ${params.id} is not in favorites`,
-      HttpStatus.NOT_FOUND,
-    );
+  async deleteArtistFromFavorites(
+    @Param() params: ArtistIdDto,
+  ): Promise<FavoritesResponse> {
+    return await this.favoriteService.deleteArtistFromFavorites(params.id);
   }
 }

@@ -4,109 +4,194 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { ArtistsService } from 'src/artists/artists.service';
-import { AlbumsService } from 'src/albums/albums.service';
-import { TracksService } from 'src/tracks/tracks.service';
+
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { FavoritesResponse } from './favorite.entity';
+import { Artist } from 'src/artists/artist.entity';
+import { Album } from 'src/albums/album.entity';
+import { Track } from 'src/tracks/track.entity';
 
 @Injectable()
 export class FavoritesService {
   constructor(
-    private readonly artistsService: ArtistsService,
-    private readonly albumsService: AlbumsService,
-    private readonly tracksService: TracksService,
+    @InjectRepository(Album)
+    private albumsRepository: Repository<Album>,
+    @InjectRepository(Track)
+    private tracksRepository: Repository<Track>,
+    @InjectRepository(Artist)
+    private artistsRepository: Repository<Artist>,
+    @InjectRepository(FavoritesResponse)
+    private favoritesRepository: Repository<FavoritesResponse>,
   ) {}
 
-  private favorites: FavoritesResponse = {
-    artists: [],
-    albums: [],
-    tracks: [],
-  };
-
-  getAllFavorites(): FavoritesResponse {
-    return this.favorites;
+  async getAllFavorites(): Promise<FavoritesResponse[]> {
+    return await this.favoritesRepository.find({
+      relations: ['artists', 'albums', 'tracks'], // Ensure relationships are loaded
+    });
   }
-  AddTrackToFavorites(favoritesId: string): { message: string } {
-    try {
-      const track = this.tracksService.getTrackById(favoritesId);
-      this.favorites.tracks.push(track);
-      return { message: 'Track add to favorites' };
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw new HttpException(
-          'Track is not found',
-          HttpStatus.UNPROCESSABLE_ENTITY,
-        );
-      }
-      throw error;
+
+  async AddTrackToFavorites(trackId: string): Promise<FavoritesResponse> {
+    const favorites = await this.favoritesRepository.findOne({
+      relations: ['tracks'],
+    });
+
+    if (!favorites) {
+      throw new NotFoundException(`Favorites with ID ${trackId} not found`);
     }
-  }
 
-  deleteTrackFromFavorites(trackId: string): boolean {
-    const trackIndex = this.favorites.tracks.findIndex(
-      (track) => track.id === trackId,
+    const track = await this.tracksRepository.findOneBy({ trackId: trackId });
+
+    if (!track) {
+      throw new NotFoundException(`Track with ID ${trackId} not found`);
+    }
+
+    const isTrackAlreadyFavorite = favorites.tracks.some(
+      (t) => t.trackId === trackId,
     );
 
+    if (isTrackAlreadyFavorite) {
+      throw new HttpException(
+        `Track with ID ${trackId} is already in favorites`,
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    // Add the track to favorites
+    favorites.tracks.push(track);
+    return await this.favoritesRepository.save(favorites);
+  }
+
+  async deleteTrackFromFavorites(trackId: string): Promise<FavoritesResponse> {
+    const favorites = await this.favoritesRepository.findOne({
+      relations: ['tracks'],
+    });
+
+    if (!favorites) {
+      throw new NotFoundException(`Favorites not found`);
+    }
+
+    const trackIndex = favorites.tracks.findIndex(
+      (track) => track.trackId === trackId,
+    );
     if (trackIndex === -1) {
-      return false;
+      throw new NotFoundException(
+        `Track with ID ${trackId} not found in favorites`,
+      );
     }
-    this.favorites.tracks.splice(trackIndex, 1);
-    return true;
+
+    favorites.tracks.splice(trackIndex, 1);
+
+    return await this.favoritesRepository.save(favorites);
   }
 
-  AddAlbumToFavorites(albumId: string): { message: string } {
-    try {
-      const album = this.albumsService.getAlbumById(albumId);
-      this.favorites.albums.push(album);
-      return { message: 'Album add to favorites' };
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw new HttpException(
-          'Album is not found',
-          HttpStatus.UNPROCESSABLE_ENTITY,
-        );
-      }
-      throw error;
-    }
-  }
+  async AddAlbumToFavorites(albumId: string): Promise<FavoritesResponse> {
+    const favorites = await this.favoritesRepository.findOne({
+      relations: ['albums'],
+    });
 
-  deleteAlbumFromFavorites(albumId: string): boolean {
-    const albumIndex = this.favorites.albums.findIndex(
-      (track) => track.id === albumId,
+    if (!favorites) {
+      throw new NotFoundException(`Favorites with ID ${albumId} not found`);
+    }
+
+    const album = await this.albumsRepository.findOneBy({ albumId: albumId });
+
+    if (!album) {
+      throw new NotFoundException(`Album with ID ${album} not found`);
+    }
+
+    const isAlbumAlreadyFavorite = favorites.albums.some(
+      (t) => t.albumId === albumId,
     );
 
+    if (isAlbumAlreadyFavorite) {
+      throw new HttpException(
+        `Track with ID ${albumId} is already in favorites`,
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    // Add the track to favorites
+    favorites.albums.push(album);
+    return await this.favoritesRepository.save(favorites);
+  }
+
+  async deleteAlbumFromFavorites(albumId: string): Promise<FavoritesResponse> {
+    const favorites = await this.favoritesRepository.findOne({
+      relations: ['albums'],
+    });
+
+    if (!favorites) {
+      throw new NotFoundException(`Favorites not found`);
+    }
+
+    const albumIndex = favorites.albums.findIndex((e) => e.albumId === albumId);
     if (albumIndex === -1) {
-      return false;
+      throw new NotFoundException(
+        `Track with ID ${albumId} not found in favorites`,
+      );
     }
-    this.favorites.albums.splice(albumIndex, 1);
-    return true;
+
+    favorites.albums.splice(albumIndex, 1);
+
+    return await this.favoritesRepository.save(favorites);
   }
 
-  AddArtistToFavorites(artistId: string): { message: string } {
-    try {
-      const artist = this.artistsService.getArtistById(artistId);
-      this.favorites.artists.push(artist);
-      return { message: 'Artist add to favorites' };
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw new HttpException(
-          'Artist is not found',
-          HttpStatus.UNPROCESSABLE_ENTITY,
-        );
-      }
-      throw error;
-    }
-  }
+  async AddArtistToFavorites(artistId: string): Promise<FavoritesResponse> {
+    const favorites = await this.favoritesRepository.findOne({
+      relations: ['artists'],
+    });
 
-  deleteArtistFromFavorites(artistId: string): boolean {
-    const artistIndex = this.favorites.artists.findIndex(
-      (artist) => artist.id === artistId,
+    if (!favorites) {
+      throw new NotFoundException(`Favorites with ID ${artistId} not found`);
+    }
+
+    const artist = await this.artistsRepository.findOneBy({
+      artistId: artistId,
+    });
+
+    if (!artist) {
+      throw new NotFoundException(`Track with ID ${artistId} not found`);
+    }
+
+    const isTrackAlreadyFavorite = favorites.tracks.some(
+      (t) => t.artistId === artistId,
     );
 
-    if (artistIndex === -1) {
-      return false;
+    if (isTrackAlreadyFavorite) {
+      throw new HttpException(
+        `Track with ID ${artistId} is already in favorites`,
+        HttpStatus.CONFLICT,
+      );
     }
-    this.favorites.artists.splice(artistIndex, 1);
-    return true;
+
+    // Add the track to favorites
+    favorites.artists.push(artist);
+    return await this.favoritesRepository.save(favorites);
+  }
+
+  async deleteArtistFromFavorites(
+    artistId: string,
+  ): Promise<FavoritesResponse> {
+    const favorites = await this.favoritesRepository.findOne({
+      relations: ['artists'],
+    });
+
+    if (!favorites) {
+      throw new NotFoundException(`Favorites not found`);
+    }
+
+    const artistIndex = favorites.artists.findIndex(
+      (e) => e.artistId === artistId,
+    );
+    if (artistIndex === -1) {
+      throw new NotFoundException(
+        `Track with ID ${artistId} not found in favorites`,
+      );
+    }
+
+    favorites.artists.splice(artistIndex, 1);
+
+    return await this.favoritesRepository.save(favorites);
   }
 }

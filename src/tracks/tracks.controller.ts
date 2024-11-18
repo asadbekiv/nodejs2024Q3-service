@@ -24,14 +24,14 @@ import {
   ApiBody,
   ApiParam,
 } from '@nestjs/swagger';
+import { CleanupService } from 'src/helper/cleanup.service';
 
 @ApiTags('Tracks')
 @Controller('track')
 export class TracksController {
   constructor(
-    private readonly albumService: AlbumsService,
-    private readonly artistService: ArtistsService,
     private readonly trackService: TracksService,
+    private readonly cleanupsService: CleanupService,
   ) {}
 
   @Get()
@@ -41,8 +41,8 @@ export class TracksController {
     description: 'Successfully retrieved Tracks list',
     type: [Track],
   })
-  getAllTracks(): Track[] {
-    return this.trackService.getAllTracks();
+  async getAllTracks(): Promise<Track[]> {
+    return await this.trackService.getAllTracks();
   }
 
   @Get(':id')
@@ -62,8 +62,8 @@ export class TracksController {
     description: 'Track not found.',
   })
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  getTrackById(@Param() params: TrackIdDto): Track {
-    return this.trackService.getTrackById(params.id);
+  async getTrackById(@Param() params: TrackIdDto): Promise<Track> {
+    return await this.trackService.getTrackById(params.id);
   }
   @Post()
   @ApiOperation({ summary: 'Create a new track.' })
@@ -77,7 +77,7 @@ export class TracksController {
     description: 'Req Body does not contains required fields !',
   })
   @ApiBody({ type: CreateTrackDto })
-  createTrack(@Body() body: CreateTrackDto): Track {
+  async createTrack(@Body() body: CreateTrackDto): Promise<Track> {
     return this.trackService.create(body);
   }
 
@@ -99,11 +99,11 @@ export class TracksController {
   })
   @ApiBody({ type: UpdateTrackDto })
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  updateTrack(
+  async updateTrack(
     @Param() params: TrackIdDto,
     @Body() body: UpdateTrackDto,
-  ): Track {
-    return this.trackService.updateTrack(params.id, body);
+  ): Promise<Track> {
+    return await this.trackService.updateTrack(params.id, body);
   }
 
   @Delete(':id')
@@ -114,7 +114,8 @@ export class TracksController {
   @ApiResponse({ status: 404, description: 'Track not found.' })
   @UsePipes(new ValidationPipe({ whitelist: true }))
   @HttpCode(204)
-  deleteTrack(@Param() params: TrackIdDto): void {
-    this.trackService.deleteTrack(params.id);
+  async deleteTrack(@Param() params: TrackIdDto): Promise<void> {
+    await this.trackService.deleteTrack(params.id);
+    await this.cleanupsService.cleanupAlbum(params.id);
   }
 }

@@ -39,8 +39,8 @@ export class UsersController {
     description: 'Successfully retrieved Users list',
     type: [User],
   })
-  getAllUsers(): User[] {
-    return this.usersService.getAllUsers();
+  async getAllUsers(): Promise<User[]> {
+    return await this.usersService.getAllUsers();
   }
 
   @Get(':id')
@@ -53,8 +53,8 @@ export class UsersController {
   })
   @ApiResponse({ status: 404, description: 'User not found.' })
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
-  getUserById(@Param() params: UserIdDto): User {
-    return this.usersService.getUserById(params.id);
+  async getUserById(@Param() params: UserIdDto): Promise<User> {
+    return await this.usersService.getUserById(params.id);
   }
 
   @Post()
@@ -70,7 +70,7 @@ export class UsersController {
   })
   @ApiBody({ type: CreateUserDto })
   async createUser(@Body() body: CreateUserDto): Promise<User> {
-    return this.usersService.create(body);
+    return await this.usersService.create(body);
   }
 
   @Put(':id')
@@ -91,11 +91,11 @@ export class UsersController {
   })
   @ApiBody({ type: UpdatePasswordDto })
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  updatePassword(
+  async updatePassword(
     @Param() params: UserIdDto,
     @Body() updatePasswordDto: UpdatePasswordDto,
-  ): User {
-    return this.usersService.updatePassword(params.id, updatePasswordDto);
+  ): Promise<User> {
+    return await this.usersService.updatePassword(params.id, updatePasswordDto);
   }
 
   @Delete(':id')
@@ -106,7 +106,7 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'User not found.' })
   @UsePipes(new ValidationPipe({ whitelist: true }))
   @HttpCode(204)
-  deleteUser(@Param() parmas: UserIdDto): void {
-    return this.usersService.delete(parmas.id);
+  async deleteUser(@Param() parmas: UserIdDto): Promise<void> {
+    return await this.usersService.delete(parmas.id);
   }
 }

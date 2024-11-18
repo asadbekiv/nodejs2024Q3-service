@@ -22,10 +22,15 @@ import {
   ApiBody,
   ApiParam,
 } from '@nestjs/swagger';
+import { CleanupService } from 'src/helper/cleanup.service';
+
 @ApiTags('Albums')
 @Controller('album')
 export class AlbumsController {
-  constructor(private readonly albumService: AlbumsService) {}
+  constructor(
+    private readonly albumService: AlbumsService,
+    private readonly cleanupsService: CleanupService,
+  ) {}
   @Get()
   @ApiOperation({ summary: 'Get all albums.' })
   @ApiResponse({
@@ -33,8 +38,8 @@ export class AlbumsController {
     description: 'Successfully retrieved Albums list',
     type: [Album],
   })
-  getAllAlbums(): Album[] {
-    return this.albumService.getAllAlbums();
+  async getAllAlbums(): Promise<Album[]> {
+    return await this.albumService.getAllAlbums();
   }
   @Get(':id')
   @ApiOperation({ summary: 'Get album by Id.' })
@@ -53,8 +58,8 @@ export class AlbumsController {
     description: 'Album not found',
   })
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  getAlbumById(@Param() parmas: AlbumIdDto): Album {
-    return this.albumService.getAlbumById(parmas.id);
+  async getAlbumById(@Param() parmas: AlbumIdDto): Promise<Album> {
+    return await this.albumService.getAlbumById(parmas.id);
   }
   @Post()
   @ApiOperation({ summary: 'Create a new album.' })
@@ -68,8 +73,8 @@ export class AlbumsController {
     description: 'Req Body does not contains required fields !',
   })
   @ApiBody({ type: CreateAlbumDto })
-  createAlbum(@Body() body: CreateAlbumDto): Album {
-    return this.albumService.createAlbum(body);
+  async createAlbum(@Body() body: CreateAlbumDto): Promise<Album> {
+    return await this.albumService.createAlbum(body);
   }
   @Put(':id')
   @ApiOperation({ summary: 'Update album.' })
@@ -89,11 +94,11 @@ export class AlbumsController {
   })
   @ApiBody({ type: UpdateAlbumDto })
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  updateAlbum(
+  async updateAlbum(
     @Param() params: AlbumIdDto,
     @Body() body: UpdateAlbumDto,
-  ): Album {
-    return this.albumService.updateAlbum(params.id, body);
+  ): Promise<Album> {
+    return await this.albumService.updateAlbum(params.id, body);
   }
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a album' })
@@ -103,7 +108,8 @@ export class AlbumsController {
   @ApiResponse({ status: 404, description: 'Album not found.' })
   @UsePipes(new ValidationPipe({ whitelist: true }))
   @HttpCode(204)
-  deleteAlbum(@Param() params: AlbumIdDto): void {
-    this.albumService.deleteAlbum(params.id);
+  async deleteAlbum(@Param() params: AlbumIdDto): Promise<void> {
+    await this.albumService.deleteAlbum(params.id);
+    await this.cleanupsService.cleanupAlbum(params.id);
   }
 }

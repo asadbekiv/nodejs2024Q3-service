@@ -14,7 +14,7 @@ import {
 import { CreateArtistDto } from './dtos/create.artist.dto';
 import { ArtistsService } from './artists.service';
 import { ArtistIdDto } from './dtos/artistId.artist.dto';
-import { updateArtistDto } from './dtos/update.artist.dto';
+import { UpdateArtistDto } from './dtos/update.artist.dto';
 import { Artist } from './artist.entity';
 import {
   ApiTags,
@@ -23,11 +23,15 @@ import {
   ApiBody,
   ApiParam,
 } from '@nestjs/swagger';
+import { CleanupService } from 'src/helper/cleanup.service';
 
 @ApiTags('Artists')
 @Controller('artist')
 export class ArtistsController {
-  constructor(private readonly artistService: ArtistsService) {}
+  constructor(
+    private readonly artistService: ArtistsService,
+    private readonly cleanupsService: CleanupService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all artists.' })
@@ -36,8 +40,8 @@ export class ArtistsController {
     description: 'Successfully retrieved Artistes list',
     type: [Artist],
   })
-  getAllArtists(): Artist[] {
-    return this.artistService.getAllArtists();
+  async getAllArtists(): Promise<Artist[]> {
+    return await this.artistService.getAllArtists();
   }
 
   @Get(':id')
@@ -57,7 +61,7 @@ export class ArtistsController {
     description: 'Artist not found.',
   })
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  getArtistById(@Param() params: ArtistIdDto): Artist {
+  async getArtistById(@Param() params: ArtistIdDto): Promise<Artist> {
     return this.artistService.getArtistById(params.id);
   }
 
@@ -73,8 +77,8 @@ export class ArtistsController {
     description: 'Req Body does not contains required fields !',
   })
   @ApiBody({ type: CreateArtistDto })
-  createArtist(@Body() body: CreateArtistDto): Artist {
-    return this.artistService.createArtist(body);
+  async createArtist(@Body() body: CreateArtistDto): Promise<Artist> {
+    return await this.artistService.createArtist(body);
   }
 
   @Put(':id')
@@ -93,12 +97,12 @@ export class ArtistsController {
     status: 404,
     description: 'Artist not found.',
   })
-  @ApiBody({ type: updateArtistDto })
+  @ApiBody({ type: UpdateArtistDto })
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  updateArtist(
+  async updateArtist(
     @Param() params: ArtistIdDto,
-    @Body() body: updateArtistDto,
-  ): Artist {
+    @Body() body: UpdateArtistDto,
+  ): Promise<Artist> {
     return this.artistService.updataArtist(params.id, body);
   }
   @Delete(':id')
@@ -109,7 +113,8 @@ export class ArtistsController {
   @ApiResponse({ status: 404, description: 'Artist not found.' })
   @UsePipes(new ValidationPipe({ whitelist: true }))
   @HttpCode(204)
-  deleteArtist(@Param() params: ArtistIdDto): void {
+  async deleteArtist(@Param() params: ArtistIdDto): Promise<void> {
     this.artistService.deleteArtist(params.id);
+    this.cleanupsService.cleanupArtist(params.id);
   }
 }

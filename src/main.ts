@@ -2,12 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+
 import * as fs from 'fs/promises';
 import * as YAML from 'js-yaml';
 
 import 'dotenv/config';
 
 const PORT = process.env.PORT;
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
@@ -34,6 +36,8 @@ async function bootstrap() {
     console.error('Error saving API documentation:', error);
   }
 
-  await app.listen(PORT);
+  await app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is runing on PORT ${PORT}`);
+  });
 }
 bootstrap();

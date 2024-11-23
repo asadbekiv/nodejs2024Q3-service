@@ -22,16 +22,8 @@ cd nodejs2024Q3-service
 ## Switch branch
 
 ```
-git checkout node
+git checkout containerization-database-orm
 ```
-
-## Installing NPM modules
-
-```
-npm install --legacy-peer-deps
-```
-
-
 
 ## Create Environment
 
@@ -41,11 +33,17 @@ cp .env.example ./.env
 ```
 
 
-
-## Running application
+## Run Docker 
 
 ```
-npm start
+docker compose up
+```
+
+## See created images
+
+```
+docker images
+
 ```
 
 After starting the app on port (4000 as default) you can open

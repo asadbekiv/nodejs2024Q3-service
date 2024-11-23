@@ -10,9 +10,13 @@ import { Album } from './albums/album.entity';
 import { Artist } from './artists/artist.entity';
 import { Track } from './tracks/track.entity';
 import { User } from './users/user.entity';
+import { DataSource } from 'typeorm'
+import { FavsModule } from './favs/favs.module';
+import { FavsAlbumEntity, FavsArtistEntity, FavsTrackEntity } from './favs/entities/fav.entity';
+
+
 
 import 'dotenv/config';
-
 
 
 @Module({
@@ -25,18 +29,21 @@ import 'dotenv/config';
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
-      entities: [User,Album,Track,Artist],
-      migrations: [`${__dirname}/migrations/*.ts`],
-
+      entities: [User,Artist,Album,Track,FavsArtistEntity,FavsAlbumEntity,FavsTrackEntity],
+      migrations: ["src/migration/**/*.ts"],
+      synchronize:true
     }),
     UsersModule,
     ArtistsModule,
     AlbumsModule,
     TracksModule,
-    
+    FavsModule,
   ],
+
   providers: [AppService],
 
   
 })
-export class AppModule {}
+export class AppModule {
+  constructor(private dataSource: DataSource) {}
+}

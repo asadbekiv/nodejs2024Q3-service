@@ -3,20 +3,17 @@ import { v4 as uuidv4 } from 'uuid';
 import { CreateTrackDto } from './dtos/ceate.track.dto';
 import { UpdateTrackDto } from './dtos/update.track.dto';
 import { Track } from './track.entity';
-import { Album } from 'src/albums/album.entity';
-import { Artist } from 'src/artists/artist.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { FavsTrackEntity } from '../favs/entities/fav.entity';
 
 @Injectable()
 export class TracksService {
   constructor(
     @InjectRepository(Track)
     private tracksRepository: Repository<Track>,
-    @InjectRepository(Album)
-    private albumsRepository: Repository<Album>,
-    @InjectRepository(Artist)
-    private artistsRepository: Repository<Artist>,
+    @InjectRepository(FavsTrackEntity)
+    private favsTracksRepository: Repository<FavsTrackEntity>,
   ) {}
 
   async getAllTracks(): Promise<Track[]> {
@@ -66,6 +63,7 @@ export class TracksService {
       throw new NotFoundException(`Track with ID ${id} not found`);
     }
 
+    await this.favsTracksRepository.remove({id:track.id});
     await this.tracksRepository.remove(track);
   }
 

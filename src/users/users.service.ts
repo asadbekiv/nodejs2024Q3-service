@@ -18,20 +18,21 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
-  async getAllUsers(): Promise<User[]> {
-    return await this.usersRepository.find();
+  async getAllUsers():Promise<User[]> {
+    let users=await this.usersRepository.find()
+    return users;
   }
 
-  async getUserById(id: string): Promise<User | null> {
+  async getUserById(id: string): Promise<User> {
     const user = await this.usersRepository.findOneBy({ id });
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-
     return user;
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
+
     const newUser = this.usersRepository.create({
       id: uuidv4(),
       login: createUserDto.login,

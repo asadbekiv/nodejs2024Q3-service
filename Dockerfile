@@ -1,21 +1,11 @@
-FROM node:22-alpine as base
-WORKDIR /usr/app/
+
+FROM node:22-alpine
+WORKDIR /app/src/
 COPY package*.json ./
-
-FROM base as dev
-RUN npm install
-
+RUN npm install && npm cache clean --force
 COPY . .
-RUN npm run build
+CMD ["npm", "run", "start:dev"]
 
-FROM base as prod
-RUN npm install --omit=dev
 
-FROM base
-COPY --from=dev /usr/app/dist ./dist
-COPY --from=dev /usr/app/package*.json ./
-COPY --from=dev /usr/app/tsconfig*.json ./
-COPY --from=dev /usr/app/doc/api.yaml ./doc/api.yaml
-COPY --from=prod /usr/app/node_modules  ./node_modules
 
-CMD [ "npm","run","start:dev" ]
+

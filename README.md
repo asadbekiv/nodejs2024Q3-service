@@ -37,6 +37,8 @@ cp .env.example ./.env
 
 ```
 docker compose up
+
+docker pull asadbek10/nodejs2024q3-service:latest
 ```
 
 ## See created images

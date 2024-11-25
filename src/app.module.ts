@@ -3,7 +3,6 @@ import { UsersModule } from './users/users.module';
 import { ArtistsModule } from './artists/artists.module';
 import { AlbumsModule } from './albums/albums.module';
 import { TracksModule } from './tracks/tracks.module';
-import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { Album } from './albums/album.entity';
@@ -13,7 +12,9 @@ import { User } from './users/user.entity';
 import { DataSource } from 'typeorm'
 import { FavsModule } from './favs/favs.module';
 import { FavsAlbumEntity, FavsArtistEntity, FavsTrackEntity } from './favs/entities/fav.entity';
-
+import { AuthModule } from './auth/auth.module';
+import { APP_GUARD } from '@nestjs/core';
+import {AuthGuard} from './auth/auth.guard';
 
 
 import 'dotenv/config';
@@ -38,9 +39,14 @@ import 'dotenv/config';
     AlbumsModule,
     TracksModule,
     FavsModule,
+    AuthModule,
+
   ],
 
-  providers: [AppService],
+  providers: [{
+    provide: APP_GUARD,
+    useClass: AuthGuard,
+  },],
 
   
 })

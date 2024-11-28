@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { UsersModule } from '../users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import * as process from 'node:process';
+import { LoggingModule } from '../logging/logging.module';
 
 
 @Module({
@@ -13,7 +14,7 @@ import * as process from 'node:process';
       global: true,
       secret:process.env.JWT_SECRET_KEY,
       signOptions: { expiresIn: process.env.TOKEN_EXPIRE_TIME}
-    })],
+    }),LoggingModule],
   providers: [AuthService],
   exports: [AuthService],
 })

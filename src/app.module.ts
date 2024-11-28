@@ -15,6 +15,7 @@ import { FavsAlbumEntity, FavsArtistEntity, FavsTrackEntity } from './favs/entit
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import {AuthGuard} from './auth/auth.guard';
+import { LoggingModule } from './logging/logging.module';
 
 
 import 'dotenv/config';
@@ -40,9 +41,8 @@ import 'dotenv/config';
     TracksModule,
     FavsModule,
     AuthModule,
-
+    LoggingModule,
   ],
-
   providers: [{
     provide: APP_GUARD,
     useClass: AuthGuard,

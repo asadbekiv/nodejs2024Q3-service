@@ -3,48 +3,58 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
+
 import { CreateUserDto } from './dtos/create.user.dto';
 import { UpdatePasswordDto } from './dtos/update.user.dto';
 import { User } from './user.entity';
-import { plainToClass } from 'class-transformer';
+import { v4 as uuidv4 } from 'uuid';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class UsersService {
-  private users: User[] = [];
+  constructor(
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+  ) {}
 
-  getAllUsers(): User[] {
-    return this.users;
+  async getAllUsers():Promise<User[]> {
+    let users=await this.usersRepository.find()
+    return users;
   }
 
-  getUserById(userId: string): User {
-    const user = this.users.find((user) => user.id == userId);
+  async getUserById(id: string): Promise<User> {
+    const user = await this.usersRepository.findOneBy({ id });
     if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
     return user;
   }
 
-  create(CreateUserDto: CreateUserDto): User {
-    const timestamp: number = Date.now();
-    const newUser: User = {
-      id: uuidv4(),
-      login: CreateUserDto.login,
-      password: CreateUserDto.password,
-      version: 1,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    };
-    this.users.push(newUser);
+  async create(createUserDto: CreateUserDto): Promise<User> {
 
-    return plainToClass(User, newUser);
+    const newUser = this.usersRepository.create({
+      id: uuidv4(),
+      login: createUserDto.login,
+      password: createUserDto.password,
+      version: 1,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    await this.usersRepository.save(newUser);
+    return newUser;
   }
 
-  updatePassword(userId: string, updatePassword: UpdatePasswordDto): User {
+  async updatePassword(
+    id: string,
+    updatePassword: UpdatePasswordDto,
+  ): Promise<User> {
     const { oldPassword, newPassword } = updatePassword;
-    const user = this.users.find((user) => user.id === userId);
+
+    const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
 
     if (user.password !== oldPassword) {
@@ -52,17 +62,19 @@ export class UsersService {
         'Incorrect old password.Please check it again !',
       );
     }
-    user.password = newPassword;
     user.version += 1;
+    user.password = newPassword;
     user.updatedAt = Date.now();
 
-    return plainToClass(User, user);
+    return await this.usersRepository.save(user);
   }
-  delete(userId: string): void {
-    const user = this.users.findIndex((user) => user.id === userId);
-    if (user === -1) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
+
+  async delete(id: string): Promise<void> {
+    const user = await this.usersRepository.findOneBy({ id });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
-    this.users.splice(user, 1);
+    await this.usersRepository.remove(user);
   }
 }

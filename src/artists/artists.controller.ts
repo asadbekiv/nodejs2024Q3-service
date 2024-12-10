@@ -7,109 +7,73 @@ import {
   Body,
   Param,
   UsePipes,
-  ValidationPipe,
-  HttpCode,
+  HttpStatus,
+  HttpCode, ParseUUIDPipe, NotFoundException,
 } from '@nestjs/common';
 
 import { CreateArtistDto } from './dtos/create.artist.dto';
 import { ArtistsService } from './artists.service';
-import { ArtistIdDto } from './dtos/artistId.artist.dto';
-import { updateArtistDto } from './dtos/update.artist.dto';
+import { UpdateArtistDto } from './dtos/update.artist.dto';
 import { Artist } from './artist.entity';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBody,
-  ApiParam,
-} from '@nestjs/swagger';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Album } from '../albums/album.entity';
+import { Track } from '../tracks/track.entity';
+import { FavsArtistEntity } from '../favs/entities/fav.entity';
 
-@ApiTags('Artists')
 @Controller('artist')
 export class ArtistsController {
-  constructor(private readonly artistService: ArtistsService) {}
+  constructor(
+    private readonly artistService: ArtistsService,
+    @InjectRepository(Artist)
+    private readonly artistsRepository: Repository<Artist>,
+    @InjectRepository(Album)
+    private readonly albumsRepository: Repository<Album>,
+    @InjectRepository(Track)
+    private readonly tracksRepository: Repository<Track>,
+    @InjectRepository(FavsArtistEntity)
+    private readonly favsArtistRepository: Repository<FavsArtistEntity>,
+  
+  ) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all artists.' })
-  @ApiResponse({
-    status: 200,
-    description: 'Successfully retrieved Artistes list',
-    type: [Artist],
-  })
-  getAllArtists(): Artist[] {
-    return this.artistService.getAllArtists();
+  async getAllArtists(): Promise<Artist[]> {
+    return await this.artistService.getAllArtists();
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get artist by Id.' })
-  @ApiParam({ name: 'id', description: 'artist Id' })
-  @ApiResponse({
-    status: 200,
-    description: 'Successfully retrieved Artists list',
-    type: Artist,
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Req Body does not contains required fields !',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Artist not found.',
-  })
-  @UsePipes(new ValidationPipe({ whitelist: true }))
-  getArtistById(@Param() params: ArtistIdDto): Artist {
-    return this.artistService.getArtistById(params.id);
+  async getArtistById(@Param('id',ParseUUIDPipe) id: string): Promise<Artist> {
+    return this.artistService.getArtistById(id);
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create a new artist.' })
-  @ApiResponse({
-    status: 201,
-    description: 'Artist created successfully.',
-    type: Artist,
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Req Body does not contains required fields !',
-  })
-  @ApiBody({ type: CreateArtistDto })
-  createArtist(@Body() body: CreateArtistDto): Artist {
-    return this.artistService.createArtist(body);
+  async createArtist(@Body() body: CreateArtistDto): Promise<Artist> {
+    return await this.artistService.createArtist(body);
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update artist' })
-  @ApiParam({ name: 'id', description: 'Artist Id' })
-  @ApiResponse({
-    status: 200,
-    description: 'Artist update successfully',
-    type: Artist,
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid uuid',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Artist not found.',
-  })
-  @ApiBody({ type: updateArtistDto })
-  @UsePipes(new ValidationPipe({ whitelist: true }))
-  updateArtist(
-    @Param() params: ArtistIdDto,
-    @Body() body: updateArtistDto,
-  ): Artist {
-    return this.artistService.updataArtist(params.id, body);
+  async updateArtist(
+    @Param('id',ParseUUIDPipe) id: string,
+    @Body() body: UpdateArtistDto,
+  ): Promise<Artist> {
+    return this.artistService.updataArtist(id, body);
   }
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a artist' })
-  @ApiParam({ name: 'id', description: 'Artist Id' })
-  @ApiResponse({ status: 204, description: 'Artist deleted successfully.' })
-  @ApiResponse({ status: 400, description: 'Invail uuid.' })
-  @ApiResponse({ status: 404, description: 'Artist not found.' })
-  @UsePipes(new ValidationPipe({ whitelist: true }))
-  @HttpCode(204)
-  deleteArtist(@Param() params: ArtistIdDto): void {
-    this.artistService.deleteArtist(params.id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteArtist(@Param('id',ParseUUIDPipe) id: string): Promise<void> {
+
+    const artist = await this.artistsRepository.findOneBy({ id });
+    if (!artist) {
+      throw new NotFoundException(`Artist with id ${id} not found`);
+    }
+    await this.favsArtistRepository.remove({ id: artist.id });
+    await this.albumsRepository.update({ artistId: id }, { artistId: null });
+    await this.tracksRepository.update({ artistId: id }, { artistId: null });
+
+    // Remove the artist
+    await this.artistsRepository.remove(artist);
   }
+    
+
+
 }

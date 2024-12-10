@@ -1,0 +1,38 @@
+services:
+  app:
+    container_name: app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - ${PORT}:${PORT}
+    restart: always
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    networks:
+      - app-network
+
+  postgres:
+    container_name: db
+    restart: always
+    image: postgres:16-alpine
+    ports:
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
+    env_file:
+      - .env
+    volumes:
+      - postgres_logs:/var/lib/postgresql
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+  
+
+
+networks:
+  app-network:
+    driver: bridge
+volumes:
+  postgres_logs:
+  postgres_data:

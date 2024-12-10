@@ -2,16 +2,26 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import {AllExceptionsFilter} from './filter/all-exceptions.filter';
+import {HttpAdapterHost} from '@nestjs/core';
+import { LoggingService } from './logging/logging.service';
+import { Request, Response, NextFunction } from 'express';
 import 'dotenv/config';
 
-const PORT = process.env.PORT;
+
+const PORT:number = Number(process.env.PORT);
 
 
 
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const loggingService = app.get(LoggingService);
+
+
   app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalFilters(new AllExceptionsFilter(loggingService));
+
 
 
   // Setup swagger
@@ -30,6 +40,30 @@ async function bootstrap() {
 
   await app.listen(PORT, () => {
     console.log(`Server is runing on PORT ${PORT}`);
+  });
+
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const { method, originalUrl, query, body } = req;
+
+    res.on('finish', () => {
+      const { statusCode } = res;
+      loggingService.log(
+        `${method} ${originalUrl} ${JSON.stringify(query)} ${JSON.stringify(
+          body,
+        )} - ${statusCode}`,
+      );
+    });
+    next();
+  });
+
+  process.on('uncaughtException', (error) => {
+    loggingService.error(`Uncaught Exception: ${error.message}`, error.stack);
+  });
+
+  process.on('unhandledRejection', (reason, promise) => {
+    loggingService.error(
+      `Unhandled Rejection at: ${promise} reason: ${reason}`,
+    );
   });
 }
 bootstrap();

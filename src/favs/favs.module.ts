@@ -6,11 +6,12 @@ import {FavsAlbumEntity,FavsArtistEntity,FavsTrackEntity} from './entities/fav.e
 import {Artist} from '../artists/artist.entity';
 import {Track} from '../tracks/track.entity';
 import {Album} from '../albums/album.entity';
+import { LoggingModule } from '../logging/logging.module';
 
 
 @Module({
   controllers: [FavsController],
-  imports:[TypeOrmModule.forFeature([FavsArtistEntity,FavsTrackEntity,FavsAlbumEntity,Album,Track,Artist])],
+  imports:[TypeOrmModule.forFeature([FavsArtistEntity,FavsTrackEntity,FavsAlbumEntity,Album,Track,Artist]),LoggingModule],
   providers: [FavsService],
 })
 export class FavsModule {}

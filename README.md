@@ -8,14 +8,39 @@
 ## Downloading
 
 ```
-git clone {repository URL}
+git clone https://github.com/asadbekiv/nodejs2024Q3-service.git
+
+```
+
+## Change directory
+
+```
+cd nodejs2024Q3-service
+```
+
+
+## Switch branch
+
+```
+git checkout node
 ```
 
 ## Installing NPM modules
 
 ```
-npm install
+npm install --legacy-peer-deps
 ```
+
+
+
+## Create Environment
+
+```
+make sure there is only one .env file.
+cp .env.example ./.env
+```
+
+
 
 ## Running application
 
